@@ -399,18 +399,20 @@ for contimm = 1 % ciclo sulle immagini
         impact(k) = max(newres.P_map(:));
         fprintf('BLOCCO %d/%d IMPATTO %1.5f\n',k,K,impact(k));
         %%aggiungo al file csv
-        for t=0:DIMBLOCCO-1
-            out(k+t+index_out,1)=k;                     %indice
-            out(k+t+index_out,2)=blocchi{k}(t+1,1);     %xblocco
-            out(k+t+index_out,3)=blocchi{k}(t+1,2);     %yblocco
-            out(k+t+index_out,4)=Csi{k}(t+1);           %csi
-            out(k+t+index_out,5)=Lambda{k}(t+1);        %lambda
-            out(k+t+index_out,6)=Gamma{k}(t+1);         %gamma
-            out(k+t+index_out,7)=h{1}(k);               %h
-            out(k+t+index_out,8)=perc_tot;              %perc_tot
-            out(k+t+index_out,9)=impact(k);             %target
+        media_csi=zeros(K);
+        media_lambda=zeros(K);
+        media_gamma=zeros(K);
+        for t=1:DIMBLOCCO
+            media_csi(k)=Csi{k}(t)+media_csi(k);
+            media_lambda(k)=Lambda{k}(t)+media_lambda(k);
+            media_gamma(k)=Gamma{k}(t)+media_gamma(k);
         end
-        index_out=index_out+DIMBLOCCO-1;
+        out(k,1)=media_csi(k)/DIMBLOCCO;           
+        out(k,2)=media_lambda(k)/DIMBLOCCO;                         
+        out(k,3)=media_gamma(k)/DIMBLOCCO;
+        out(k,4)=korig{1}(k);
+        out(k,5)=h{1}(k);          
+        out(k,6)=impact(k);        
     end
     toc
     writematrix(out,'M.csv') 
