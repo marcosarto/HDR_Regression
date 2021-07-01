@@ -3,7 +3,7 @@ function [blocchi] = fill(K,N,M,blocchi)
     for i=24:12:N-24
         for j=24:12:M-24
             coin=randi([0 3],1);
-            if coin==2
+            if coin==3
                 mat=generaMat(i,j);
                 disp(mat)
                 blocchi{k}=mat;
