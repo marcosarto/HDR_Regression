@@ -125,7 +125,7 @@ for contimm = 1 % ciclo sulle immagini
         end
     end
     if rigenkey == 1
-        [flagfun] = keygeneration5(C,N,M,dim,ln,chiave,filechiave,100);
+        [flagfun] = keygeneration5(C,N,M,dim,ln,chiave,filechiave,250);
         if flagfun == 0
             fprintf('\nPROBLEMI CON LA GENERAZIONE DELLA CHIAVE, ESCO...\n');
             return;
