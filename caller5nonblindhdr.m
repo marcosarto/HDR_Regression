@@ -125,7 +125,7 @@ for contimm = 1 % ciclo sulle immagini
         end
     end
     if rigenkey == 1
-        [flagfun] = keygeneration5(C,N,M,dim,ln,chiave,filechiave,250);
+        [flagfun] = keygeneration5(C,N,M,dim,ln,chiave,filechiave);
         if flagfun == 0
             fprintf('\nPROBLEMI CON LA GENERAZIONE DELLA CHIAVE, ESCO...\n');
             return;
@@ -382,6 +382,26 @@ for contimm = 1 % ciclo sulle immagini
     fprintf('CON TUTTI I BLOCCHI, P = %1.5f\n',perc_tot);
     impact = zeros(K,1);
     index_out=0;
+    
+    for k=1:K
+        %%aggiungo al file csv
+        media_csi=zeros(K);
+        media_lambda=zeros(K);
+        media_gamma=zeros(K);
+        for t=1:DIMBLOCCO
+            media_csi(k)=Csi{k}(t)+media_csi(k);
+            media_lambda(k)=Lambda{k}(t)+media_lambda(k);
+            media_gamma(k)=Gamma{k}(t)+media_gamma(k);
+        end
+        out(k,1)=media_csi(k)/DIMBLOCCO;           
+        out(k,2)=media_lambda(k)/DIMBLOCCO;                         
+        out(k,3)=media_gamma(k)/DIMBLOCCO;
+        out(k,4)=korig{1}(k);
+        out(k,5)=h{1}(k); 
+    end
+    
+    [out,K] = expansion(out,K);
+    
     for k = 1:K
         % analisi impatto percettivo dei singoli blocchi
         if ~marked{contimm}(k)
@@ -398,20 +418,7 @@ for contimm = 1 % ciclo sulle immagini
         newres.P_map(newres.P_map<1e-3) = 0; % sogliala
         impact(k) = max(newres.P_map(:));
         fprintf('BLOCCO %d/%d IMPATTO %1.5f\n',k,K,impact(k));
-        %%aggiungo al file csv
-        media_csi=zeros(K);
-        media_lambda=zeros(K);
-        media_gamma=zeros(K);
-        for t=1:DIMBLOCCO
-            media_csi(k)=Csi{k}(t)+media_csi(k);
-            media_lambda(k)=Lambda{k}(t)+media_lambda(k);
-            media_gamma(k)=Gamma{k}(t)+media_gamma(k);
-        end
-        out(k,1)=media_csi(k)/DIMBLOCCO;           
-        out(k,2)=media_lambda(k)/DIMBLOCCO;                         
-        out(k,3)=media_gamma(k)/DIMBLOCCO;
-        out(k,4)=korig{1}(k);
-        out(k,5)=h{1}(k);          
+        %aggiungo al csv        
         out(k,6)=impact(k);        
     end
     toc

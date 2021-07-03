@@ -1,4 +1,4 @@
-function [flagfun,K]=keygeneration5(C,N,M,dim,ln,chiave,filechiave,newk)
+function [flagfun,K]=keygeneration5(C,N,M,dim,ln,chiave,filechiave)
 
 % INIZIALIZZAZIONE PRNG CON LA CHIAVE
 rng(chiave);
@@ -13,10 +13,8 @@ smooth = 0.8; % coefficiente di smoothness dei confini
 ft = 0.3; % frequenza di taglio del lpf applicato ai confini
 L = 20; % lunghezza del lpf applicato ai confini
 
-K = newk;
+K = 0;
 
-% ESTRAZIONE SHIFT DEL CODEBOOK
-d = rand(K,1) - 1/2;
 
 % TEST DI COMPERTURA DEL MOSAICO
 coverage = zeros(N,M);
@@ -25,8 +23,10 @@ coverage = zeros(N,M);
 % definizione variabili
 blocchi = cell(K,1);
 
-blocchi = fill(K,N,M,blocchi);
+[blocchi,K] = fill(N,M,blocchi);
 
+% ESTRAZIONE SHIFT DEL CODEBOOK
+d = rand(K,1) - 1/2;
 
 % TEST DI COPERTURA DEI BLOCCHI
 coverage = ones(N,M);
