@@ -152,14 +152,14 @@ for contimm = 1 % ciclo sulle immagini
     
     
     % Istanzia variabili feature
-    korig{contimm} = zeros(K,1); % feature originali
-    hsol{contimm} = cell(K,1); % feature obiettivo
-    h{contimm} = zeros(K,1); % feature quantizzate
-    hwat{contimm} = zeros(K,1); % feature marchiate
-    marked{contimm} = zeros(K,1); % blocchi da considerare
-    selez{contimm} = zeros(K,2); % flag di scelta opzione
-    y{contimm} = cell(K,1); % blocchi marchiati
-    VincViol{contimm} = zeros(K,2); % flag di vincoli attivi
+    korig{contimm} = zeros(K*3,1); % feature originali
+    hsol{contimm} = cell(K*3,1); % feature obiettivo
+    h{contimm} = zeros(K*3,1); % feature quantizzate
+    hwat{contimm} = zeros(K*3,1); % feature marchiate
+    marked{contimm} = zeros(K*3,1); % blocchi da considerare
+    selez{contimm} = zeros(K*3,2); % flag di scelta opzione
+    y{contimm} = cell(K*3,1); % blocchi marchiati
+    VincViol{contimm} = zeros(K*3,2); % flag di vincoli attivi
     
     % Componenti maschera percettiva
     Theta = 0.32;
@@ -213,9 +213,6 @@ for contimm = 1 % ciclo sulle immagini
     Avg = ones(5,5)*0.05 + [zeros(1,5); zeros(1,5); 0 0 0.15 0 0; zeros(1,5); zeros(1,5)];
     edgesfilt = filter2(Avg,edges);
     index_out=0;
-    
-    
-    
     for k = 1:K
 
         % Blocco originale
