@@ -1,2 +1,5 @@
-[mat] = generaMat(37,316);
-disp(mat)
+[out,K] = expansion([1,1,1,1.34,1.04;
+    1,1,1,3.11,3.01;
+    1,1,1,5.1,3],3);
+disp(out)
+disp(K)

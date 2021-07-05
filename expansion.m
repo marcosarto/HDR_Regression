@@ -1,35 +1,26 @@
 function [out,K] = expansion(out,K)
     
-    SOGLIA_UNO = 8;
-    SOGLIA_DUE = 1;
-    j=0;
-    out2=zeros(size(out,1)*2,5);
+    DELTA_UNO=1;
+    DELTA_DUE=3;
+    DELTA_TRE=10;
+    outout=zeros(0,5);
+    
     for k=1:K
-        if out(k,5) > SOGLIA_UNO
-            out2=[out2;out(k,:)];
-            j=j+1;
-            out2(j,5)=out2(k,5)+1;
-            out2=[out2;out(k,:)];
-            j=j+1;
-            out2(j+1,5)=out2(k,5)-1;
+        if out(k,4) >= 1 && out(k,4) <= 2 
+            out2=[out(k,1),out(k,2),out(k,3),out(k,4),out(k,5)+DELTA_UNO/10];
+            out3=[out(k,1),out(k,2),out(k,3),out(k,4),out(k,5)+2*DELTA_UNO/10];
             
-        elseif out(k,5) < SOGLIA_DUE
-            out2=[out2;out(k,:)];
-            j=j+1;
-            out2(j,5)=out2(k,5)+0.1;
-            out2=[out2;out(k,:)];
-            j=j+1;
-            out2(j+1,5)=out2(k,5)-0.1;
+        elseif out(k,4) > 2 && out(k,4) <=5 
+            out2=[out(k,1),out(k,2),out(k,3),out(k,4),out(k,5)+DELTA_DUE/10];
+            out3=[out(k,1),out(k,2),out(k,3),out(k,4),out(k,5)-DELTA_DUE/10];
             
-        else
-            out2=[out2;out(k,:)];
-            j=j+1;
-            out2(j,5)=out2(k,5)+0.5;
-            out2=[out2;out(k,:)];
-            j=j+1;
-            out2(j+1,5)=out2(k,5)-0.5;
+        elseif out(k,4) > 5
+            out2=[out(k,1),out(k,2),out(k,3),out(k,4),out(k,5)+DELTA_TRE/10];
+            out3=[out(k,1),out(k,2),out(k,3),out(k,4),out(k,5)+2*DELTA_TRE/10];
         end
+        
+        outout = [outout;out2;out3];  
     end
-    K = K + j;
-    out = [out;out2];
+    %K = K + size(outout,1);
+    out = [out;outout];
 end

@@ -386,6 +386,8 @@ for contimm = 1 % ciclo sulle immagini
     impact = zeros(K,1);
     index_out=0;
     
+    K = K/3;
+    
     for k=1:K
         %%aggiungo al file csv
         media_csi=zeros(K);
