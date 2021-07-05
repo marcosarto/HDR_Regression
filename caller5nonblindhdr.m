@@ -403,7 +403,7 @@ for contimm = 1 % ciclo sulle immagini
         out(k,5)=h{1}(k); 
     end
     
-    [out,K] = expansion(out,K);
+    %[out,K] = expansion(out,K);
     
     for k = 1:K
         % analisi impatto percettivo dei singoli blocchi
