@@ -152,14 +152,14 @@ for contimm = 1 % ciclo sulle immagini
     
     
     % Istanzia variabili feature
-    korig{contimm} = zeros(K,1); % feature originali
-    hsol{contimm} = cell(K,1); % feature obiettivo
-    h{contimm} = zeros(K,1); % feature quantizzate
-    hwat{contimm} = zeros(K,1); % feature marchiate
-    marked{contimm} = zeros(K,1); % blocchi da considerare
-    selez{contimm} = zeros(K,2); % flag di scelta opzione
-    y{contimm} = cell(K,1); % blocchi marchiati
-    VincViol{contimm} = zeros(K,2); % flag di vincoli attivi
+    korig{contimm} = zeros(K*3,1); % feature originali
+    hsol{contimm} = cell(K*3,1); % feature obiettivo
+    h{contimm} = zeros(K*3,1); % feature quantizzate
+    hwat{contimm} = zeros(K*3,1); % feature marchiate
+    marked{contimm} = zeros(K*3,1); % blocchi da considerare
+    selez{contimm} = zeros(K*3,2); % flag di scelta opzione
+    y{contimm} = cell(K*3,1); % blocchi marchiati
+    VincViol{contimm} = zeros(K*3,2); % flag di vincoli attivi
     
     % Componenti maschera percettiva
     Theta = 0.32;
@@ -215,8 +215,8 @@ for contimm = 1 % ciclo sulle immagini
     index_out=0;
     
     
-    
-    for k = 1:K
+   
+   for k = 1:K
 
         % Blocco originale
         x0 = cai2(sub2ind(size(cai2),blocchi{k}(:,1),blocchi{k}(:,2)));
@@ -375,7 +375,166 @@ for contimm = 1 % ciclo sulle immagini
         cai2wat(sub2ind(size(cai2wat),blocchi{k}(:,1),blocchi{k}(:,2))) = y{contimm}{k}(:,1); % embedding vero e proprio
         fprintf('\n KURTOSIS OTTENUTA: %2.4f, MARKED %d\n\n',hwat{contimm}(k),marked{contimm}(k));
             
-    end
+   end
+    
+   for k=1:K
+        %%aggiungo al file csv
+        media_csi=zeros(K);
+        media_lambda=zeros(K);
+        media_gamma=zeros(K);
+        for t=1:DIMBLOCCO
+            media_csi(k)=Csi{k}(t)+media_csi(k);
+            media_lambda(k)=Lambda{k}(t)+media_lambda(k);
+            media_gamma(k)=Gamma{k}(t)+media_gamma(k);
+        end
+        out(k,1)=media_csi(k)/DIMBLOCCO;           
+        out(k,2)=media_lambda(k)/DIMBLOCCO;                         
+        out(k,3)=media_gamma(k)/DIMBLOCCO;
+        out(k,4)=korig{1}(k);
+        out(k,5)=h{1}(k); 
+   end
+    
+   [out]=expansion(out,K);
+   
+   K=K*3;
+   j=1;
+   for k = 1:K/3
+        blocchi{K/3+j} = blocchi{k};
+        blocchi{K/3+j+1} = blocchi{k};
+        demb(K/3+j)=demb(k);
+        demb(K/3+j+1)=demb(k);
+        ncoeff(K/3+j)=ncoeff(k);
+        ncoeff(K/3+j+1)=ncoeff(k);
+        W{contimm}(K/3+j)=W{contimm}(k);
+        W{contimm}(K/3+j+1)=W{contimm}(k);
+        %marked{contimm}(K/3+j)=marked{contimm}(k);
+        %marked{contimm}(K/3+j+1)=marked{contimm}(k);
+        j=j+2;
+   end
+   for k=1:K
+       h{contimm}(k)=out(k,5);
+   end
+  
+   
+   for k = K/3+1:K
+
+        % Blocco originale
+        x0 = cai2(sub2ind(size(cai2),blocchi{k}(:,1),blocchi{k}(:,2)));
+
+        % Kurtosis originale
+        korig{contimm}(k) = kurtosis(x0);
+        if isnan(korig{contimm}(k))
+            x0 = x0 + WGN(size(x0),1);
+            korig{contimm}(k) = kurtosis(x0);
+        end    
+        
+        
+        
+        % Blocchi marchiati
+        y{contimm}{k} = zeros(size(x0,1),3); % scelta definitiva, prima opzione, seconda opzione
+       
+        % Quantizzazione feature
+        indexq = [0;0];
+        indexq(1) = sum(korig{contimm}(k)>=kurtosep);
+        if xor(demb(k)>=0,korig{contimm}(k)-kurtosep(indexq(1))>=deltasep(indexq(1))/2)
+            indexq(2) = indexq(1)+(demb(k)<0)*2-1;
+            if indexq(2) > length(deltasep) || indexq(2) == 0
+                indexq(2) = [];
+            end
+        else
+            indexq(2) = [];
+        end
+
+        hsol{contimm}{k} = round((korig{contimm}(k)-demb(k)*deltasep(indexq)-kurtosfas(indexq))./deltasep(indexq)).*deltasep(indexq)+demb(k)*deltasep(indexq)+kurtosfas(indexq);
+        for i = 1:length(indexq)
+            while hsol{contimm}{k}(i)>kurtosep(indexq(i))
+                hsol{contimm}{k}(i) = hsol{contimm}{k}(i)-deltasep(indexq(i));
+            end
+            while hsol{contimm}{k}(i)<kurtosep(indexq(i))
+                hsol{contimm}{k}(i) = hsol{contimm}{k}(i)+deltasep(indexq(i));
+            end
+        end
+        
+
+        % Calcolo 1 oppure 2 possibili soluzioni 
+        temp = zeros(length(x0),2);
+        exitflag = zeros(2,1);
+        fval = zeros(2,1);
+        VincMatrA = [-1*diag(ones(size(x0)));diag(ones(size(x0)))];
+        VincMatrB = [W{contimm}{k}-x0;x0+W{contimm}{k}]; % vincolo della forma Ax <= B
+        for i = 1:length(hsol{contimm}{k})
+            fprintf('******************************************\n');
+            fprintf('** INIZIO PRE-EMBEDDING\t\t\t**\n');
+            if K<1000
+                fprintf('** BLOCCO %d/%d\t\t\t\t**\n',k,K);
+            else
+                fprintf('** BLOCCO %d/%d\t\t\t**\n',k,K);
+            end
+            if length(hsol{contimm}{k}) == 2
+                fprintf('** TARGET %d/2\t\t\t\t**\n',i);
+            else
+                fprintf('** TARGET UNICO\t\t\t\t**\n');
+            end
+            fprintf('** KURTOSIS ORIGINALE : %2.4f\t\t**\n',korig{contimm}(k));
+            fprintf('** OBIETTIVO :          %2.4f\t\t**\n',hsol{contimm}{k}(i));
+            fprintf('******************************************\n\n');
+            [temp(:,i),fval(i),exitflag(i),output] = fmincon(@(x)abs(kurtosis(x)-hsol{contimm}{k}(i)),x0,VincMatrA,VincMatrB,[],[],[],[],@vincolo,options);
+        end
+        
+        
+        
+        % Scelta opzione definitiva
+        y{contimm}{k}(:,2) = temp(:,1); % prima opzione (sempre)
+        if length(hsol{contimm}{k}) == 2 % eventuale seconda opzione
+            y{contimm}{k}(:,3) = temp(:,2);
+            if xor(abs(kurtosis(temp(:,1))-hsol{contimm}{k}(1))<1e-3,...
+                    abs(kurtosis(temp(:,2))-hsol{contimm}{k}(2))<1e-3) % scelgo quella che converge
+                indconv = find([abs(kurtosis(temp(:,1))-hsol{contimm}{k}(1))<1e-3,...
+                    abs(kurtosis(temp(:,2))-hsol{contimm}{k}(2))<1e-3]==1);
+                y{contimm}{k}(:,1) = temp(:,indconv);
+                h{contimm}(k) = hsol{contimm}{k}(indconv);
+                hwat{contimm}(k) = kurtosis(temp(:,indconv));
+                selez{contimm}(k,1) = indconv;
+                selez{contimm}(k,2) = 1;
+            elseif abs(kurtosis(temp(:,1))-hsol{contimm}{k}(1))<1e-3 && ...
+                    abs(kurtosis(temp(:,2))-hsol{contimm}{k}(2))<1e-3 % convergono entrambe, scelgo la norma L1 del marchio minima
+                indminL1 = find(sum(abs(temp-x0*ones(1,2)))==min(sum(abs(temp-x0*ones(1,2)))));
+                y{contimm}{k}(:,1) = temp(:,indminL1(1));
+                h{contimm}(k) = hsol{contimm}{k}(indminL1(1));
+                hwat{contimm}(k) = kurtosis(temp(:,indminL1(1)));
+                selez{contimm}(k,1) = indminL1(1);
+                selez{contimm}(k,2) = 2;
+            else % non convergono entrambe, scelgo la piu vicina al valore quantizzato
+                indminfval = find(fval==min(fval));
+                y{contimm}{k}(:,1) = temp(:,indminfval(1));
+                h{contimm}(k) = hsol{contimm}{k}(indminfval(1));
+                hwat{contimm}(k) = kurtosis(temp(:,indminfval(1)));
+                selez{contimm}(k,1) = indminfval(1);
+                selez{contimm}(k,2) = 3;
+            end
+        else % solo una opzione disponibile
+            y{contimm}{k}(:,1) = temp(:,1);
+            h{contimm}(k) = hsol{contimm}{k}(1);
+            hwat{contimm}(k) = kurtosis(temp(:,1));
+            selez{contimm}(k,1) = 3;
+            selez{contimm}(k,2) = 0;
+        end
+        VincViol{contimm}(k,1) = sum(VincMatrA*y{contimm}{k}(:,1)-VincMatrB >= -tolcon); % numero vincoli Linf violati
+        VincViol{contimm}(k,2) = sum(abs(y{contimm}{k}(:,1)-x0)) >= summax; % numero vincoli L1 violati
+
+        if abs(h{contimm}(k)-hwat{contimm}(k))<1e-3  % soluzione scelta converge
+                %sum(abs(y{k,1,contimm}-x0))/summax <= 0.5 % non troppo vicina al vincolo
+            marked{contimm}(k) = 1; % marchiato
+        else
+            % undo embedding
+            y{contimm}{k}(:,1) = x0; 
+            hwat{contimm}(k) = korig{contimm}(k);
+            marked{contimm}(k) = 0; % non marchiato
+        end
+        cai2wat(sub2ind(size(cai2wat),blocchi{k}(:,1),blocchi{k}(:,2))) = y{contimm}{k}(:,1); % embedding vero e proprio
+        fprintf('\n KURTOSIS OTTENUTA: %2.4f, MARKED %d\n\n',hwat{contimm}(k),marked{contimm}(k));
+            
+   end
     
 %     *********************
 %     ** PERCEPTUAL TEST **
@@ -393,24 +552,6 @@ for contimm = 1 % ciclo sulle immagini
     impact = zeros(K,1);
     index_out=0;
     
-    for k=1:K
-        %%aggiungo al file csv
-        media_csi=zeros(K);
-        media_lambda=zeros(K);
-        media_gamma=zeros(K);
-        for t=1:DIMBLOCCO
-            media_csi(k)=Csi{k}(t)+media_csi(k);
-            media_lambda(k)=Lambda{k}(t)+media_lambda(k);
-            media_gamma(k)=Gamma{k}(t)+media_gamma(k);
-        end
-        out(k,1)=media_csi(k)/DIMBLOCCO;           
-        out(k,2)=media_lambda(k)/DIMBLOCCO;                         
-        out(k,3)=media_gamma(k)/DIMBLOCCO;
-        out(k,4)=korig{1}(k);
-        out(k,5)=h{1}(k); 
-    end
-    
-    %[out,K] = expansion(out,K);
     
     for k = 1:K
         % analisi impatto percettivo dei singoli blocchi
