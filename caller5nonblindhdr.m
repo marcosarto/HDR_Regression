@@ -248,7 +248,7 @@ for contimm = 1 % ciclo sulle immagini
         row2 = row2';
 
         % Calcolo maschera percettiva
-        Lambda{k} = 1-((1/(1*2^2))*x0)+(((1/(1*2^2))*x0)>=0.5).*(((1/(1*2^2))*x0)*2-1);
+        Lambda{k} = 1-((1/(255*2^2))*x0)+(((1/(255*2^2))*x0)>=0.5).*(((1/(255*2^2))*x0)*2-1);
 
         Csi{k} =  1/4*1/(sn^2*3)*sum([cd2h(sub2ind(size(cd2h),row,col)); cd2v(sub2ind(size(cd2v),row,col)); cd2d(sub2ind(size(cd2d),row,col))].^2) .*...
             1/(sn2^2*3) .*sum([cd1h(sub2ind(size(cd1h),row2,col2)); cd1v(sub2ind(size(cd1v),row2,col2)); cd1d(sub2ind(size(cd1d),row2,col2))].^2).*...
