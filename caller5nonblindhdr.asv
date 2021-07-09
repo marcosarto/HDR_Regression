@@ -376,9 +376,6 @@ for contimm = 1 % ciclo sulle immagini
         for i=1:36
             out2(k,i)=x0(i);
         end
-        for i=1:36
-            out2(k,i+36)=y{contimm}{k}(i,1);
-        end
     end
     
 %     *********************
@@ -437,7 +434,7 @@ for contimm = 1 % ciclo sulle immagini
         impact(k) = max(newres.P_map(:));
         fprintf('BLOCCO %d/%d IMPATTO %1.5f\n',k,K,impact(k));
         %aggiungo al csv        
-        out(k,7)=impact(k); 
+        out(k,6)=impact(k); 
         out2(k,73)=impact(k);
     end
     toc
